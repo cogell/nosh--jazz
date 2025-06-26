@@ -1,3 +1,13 @@
+import { startWorker } from 'jazz-tools/worker';
+
+startWorker({
+  accountID: process.env.JAZZ_WORKER_ACCOUNT,
+  accountSecret: process.env.JAZZ_WORKER_SECRET,
+  // TODO: env var
+  syncServer: 'wss://cloud.jazz.tools/?key=cedric.cogell@gmail.com',
+  // AccountSchema: Account,
+});
+
 async function handleNewRecipe(request: Request) {
   try {
     const body = await request.json();
