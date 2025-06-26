@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { Account, Recipe } from './schema';
-import { useAccount } from 'jazz-tools/react';
+import { useAccount, clearAccount } from 'jazz-tools/react';
+import { AuthButton } from './components/auth-button';
+import { co, Group } from 'jazz-tools';
 
 const useRecipes = () => {
   const { me } = useAccount(Account, {
@@ -39,7 +41,17 @@ function RecipeList() {
   );
 }
 
+function ResetButton() {
+  const { logOut } = useAccount(Account);
+  const handleReset = async () => {
+    await logOut();
+    window.location.reload();
+  };
+  return <Button onClick={handleReset}>Reset</Button>;
+}
+
 function App() {
+  const { me } = useAccount(Account);
   const recipes = useRecipes();
   // console.log(recipes);
   const [url, setUrl] = useState<string>('');
@@ -47,11 +59,27 @@ function App() {
   const handleAddRecipe = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log(url);
-    const newRecipe = Recipe.create({
-      title: 'fetching...',
-      url: url,
-      description: '',
-    });
+    if (!me) {
+      console.log('no me');
+      return;
+    }
+    const newRecipe = Recipe.create(
+      {
+        title: 'fetching...',
+        url: url,
+        description: '',
+      },
+      { owner: me },
+    );
+    const recipeGroup = newRecipe._owner.castAs(Group);
+    recipeGroup.addMember(me, 'admin');
+    const worker = await co
+      .account()
+      .load(import.meta.env.VITE_JAZZ_WORKER_ACCOUNT);
+    if (worker) {
+      console.log('adding worker to group', worker);
+      recipeGroup.addMember(worker, 'writer');
+    }
     recipes?.push(newRecipe);
 
     // fire off a call to the server to fetch the recipe
@@ -61,13 +89,18 @@ function App() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ url: url }),
+      body: JSON.stringify({
+        url: url,
+        senderId: me?.id,
+        recipeId: newRecipe.id,
+      }),
     });
   };
 
   return (
-    <div className="flex flex-col px-4 items-center justify-center min-h-screen h-full">
-      <div className="flex flex-col gap-4 max-w-md w-full p-4 bg-slate-100 rounded-lg">
+    <div className="flex flex-col px-4  min-h-screen h-full">
+      <AuthButton />
+      <div className="flex flex-col gap-4 max-w-md w-full h-full p-4 bg-slate-100 rounded-lg">
         <h1 className="text-2xl font-bold">Save Recipes</h1>
         <form className="flex flex-col gap-2" onSubmit={handleAddRecipe}>
           <Input
@@ -84,6 +117,9 @@ function App() {
       </div>
       <div className="flex flex-col gap-4 max-w-md w-full p-4 rounded-lg">
         <RecipeList />
+      </div>
+      <div className="flex flex-col gap-4 max-w-md w-full p-4 rounded-lg">
+        <ResetButton />
       </div>
     </div>
   );
