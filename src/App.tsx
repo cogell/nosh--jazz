@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { Account, Recipe } from './schema';
-import { useAccount, clearAccount } from 'jazz-tools/react';
+import { useAccount } from 'jazz-tools/react';
 import { AuthButton } from './components/auth-button';
 import { co, Group } from 'jazz-tools';
 
@@ -64,7 +64,7 @@ function App() {
       return;
     }
     const ownerGroup = Group.create();
-    ownerGroup.addMember(me, 'admin');
+    // ownerGroup.addMember(me, 'admin');
     const worker = await co
       .account()
       .load(import.meta.env.VITE_JAZZ_WORKER_ACCOUNT);

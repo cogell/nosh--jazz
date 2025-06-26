@@ -1,7 +1,5 @@
-import { co, Group } from 'jazz-tools';
 import { startWorker } from 'jazz-tools/worker';
-import { PureJSCrypto } from 'cojson/crypto/PureJSCrypto';
-import { Account, Recipe, RecipeList, Root } from '../src/schema';
+import { Recipe } from '../src/schema';
 
 interface NewRecipeRequest {
   url: string;
@@ -57,7 +55,7 @@ async function handleNewRecipe(request: Request, env: Env) {
 
     console.log('loading recipe', recipeId);
 
-    const recipe = await Recipe.load(recipeId);
+    const recipe = await Recipe.load('co_z2C4Ktmmip2xqvgpR6Awsxv15JG');
     if (!recipe) {
       console.log('recipe not found');
       return Response.json(
