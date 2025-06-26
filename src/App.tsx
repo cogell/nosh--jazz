@@ -63,23 +63,23 @@ function App() {
       console.log('no me');
       return;
     }
+    const ownerGroup = Group.create();
+    ownerGroup.addMember(me, 'admin');
+    const worker = await co
+      .account()
+      .load(import.meta.env.VITE_JAZZ_WORKER_ACCOUNT);
+    if (worker) {
+      console.log('adding worker to group', worker);
+      ownerGroup.addMember(worker, 'writer');
+    }
     const newRecipe = Recipe.create(
       {
         title: 'fetching...',
         url: url,
         description: '',
       },
-      { owner: me },
+      ownerGroup,
     );
-    const recipeGroup = newRecipe._owner.castAs(Group);
-    recipeGroup.addMember(me, 'admin');
-    const worker = await co
-      .account()
-      .load(import.meta.env.VITE_JAZZ_WORKER_ACCOUNT);
-    if (worker) {
-      console.log('adding worker to group', worker);
-      recipeGroup.addMember(worker, 'writer');
-    }
     recipes?.push(newRecipe);
 
     // fire off a call to the server to fetch the recipe

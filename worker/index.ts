@@ -35,7 +35,7 @@ async function handleNewRecipe(request: Request, env: Env) {
       accountSecret: env.JAZZ_WORKER_SECRET,
       // TODO: env var
       syncServer: 'wss://cloud.jazz.tools/?key=cedric.cogell@gmail.com',
-      crypto: await PureJSCrypto.create(),
+      // crypto: await PureJSCrypto.create(),
       // AccountSchema: Account,
     });
     console.log('worker', worker);

@@ -25,7 +25,7 @@ createRoot(document.getElementById('root')!).render(
       }}
     >
       <App />
-      <JazzInspector />
+      {import.meta.env.DEV && <JazzInspector position="bottom left" />}
     </JazzReactProvider>
   </StrictMode>,
 );
