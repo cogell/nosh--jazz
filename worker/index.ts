@@ -55,7 +55,7 @@ async function handleNewRecipe(request: Request, env: Env) {
 
     console.log('loading recipe', recipeId);
 
-    const recipe = await Recipe.load('co_z2C4Ktmmip2xqvgpR6Awsxv15JG');
+    const recipe = await Recipe.load(recipeId);
     if (!recipe) {
       console.log('recipe not found');
       return Response.json(
