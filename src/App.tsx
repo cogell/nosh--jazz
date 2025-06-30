@@ -4,7 +4,7 @@ import { Account, Recipe } from './schema';
 import { useAccount } from 'jazz-tools/react';
 import { co, Group, z } from 'jazz-tools';
 import { assign, fromPromise, setup } from 'xstate';
-import { useActor, useMachine } from '@xstate/react';
+import { useMachine } from '@xstate/react';
 
 const useRecipes = () => {
   const { me } = useAccount(Account, {
@@ -148,27 +148,7 @@ const machine = setup({
         }
       },
     }),
-    // STUB
     onSubmit: () => {},
-    // onSubmit: assign(({ context, event }) => {
-    //   const ownerGroup = Group.create();
-    //   ownerGroup.addMember(context.serverWorker, 'writer');
-    //   const newRecipe = Recipe.create(
-    //     {
-    //       url: context.url,
-    //     },
-    //     ownerGroup,
-    //   );
-    //   context.recipes?.push(newRecipe);
-    //   console.log('context', context);
-    //   console.log('url', context.url);
-    //   return {
-    //     url: '',
-    //     urlError: null,
-    //     // FIXME:
-    //     // recipes: [...context.recipes, newRecipe],
-    //   };
-    // }),
     afterSubmit: assign({
       url: '',
       urlError: null,
@@ -208,8 +188,8 @@ const machine = setup({
           target: '.Error',
           actions: assign({
             serverWorkerError: ({ event }) => {
-              console.log('serverWorkerError', event.error.message);
-              return event.error.message;
+              console.log('serverWorkerError', event.error);
+              return 'Server worker error';
             },
           }),
         },
@@ -251,7 +231,7 @@ const machine = setup({
 });
 
 function AddRecipeForm() {
-  const { me } = useAccount(Account);
+  // const { me } = useAccount(Account);
   const recipes = useRecipes();
   const [snapshot, send] = useMachine(
     machine.provide({
@@ -267,17 +247,18 @@ function AddRecipeForm() {
             ownerGroup,
           );
           recipes?.push(newRecipe);
-          fetch('/api/new-recipe', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              url: snapshot.context.url,
-              senderId: me?.id,
-              recipeId: newRecipe.id,
-            }),
-          });
+
+          // fetch('/api/new-recipe', {
+          //   method: 'POST',
+          //   headers: {
+          //     'Content-Type': 'application/json',
+          //   },
+          //   body: JSON.stringify({
+          //     url: snapshot.context.url,
+          //     senderId: me?.id,
+          //     recipeId: newRecipe.id,
+          //   }),
+          // });
         },
       },
     }),

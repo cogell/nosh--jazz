@@ -29,8 +29,8 @@ export async function handleNewRecipe(request: Request, env: Env) {
 
     console.log('senderId', senderId, 'recipeId', recipeId);
 
-    // move this to a global variable so we don't have to start it every time?
-    const { worker } = await startWorker({
+    // used implicitly
+    await startWorker({
       accountID: env.JAZZ_WORKER_ACCOUNT,
       accountSecret: env.JAZZ_WORKER_SECRET,
       // TODO: env var
