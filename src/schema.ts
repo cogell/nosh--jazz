@@ -2,9 +2,11 @@ import { co, Group, z } from 'jazz-tools';
 
 export const Recipe = co.map({
   url: z.url(), // FIXME: pay attention to how this works....
-  title: z.string(),
-  description: z.string(),
+  title: z.optional(z.string()),
+  description: z.optional(z.string()),
+  firecrawlHtml: z.optional(z.string()),
 });
+export type Recipe = co.loaded<typeof Recipe>;
 
 export const RecipeList = co.list(Recipe);
 
@@ -60,3 +62,5 @@ export const Account = co
     }
     return acct;
   });
+
+export type Account = co.loaded<typeof Account>;
