@@ -1,6 +1,6 @@
 import { Router, Route } from 'wouter';
-import Home from './pages/home';
-import Recipe from './pages/recipes/:id';
+import Home from './pages/home/home-page';
+import Recipe from './pages/recipes/:id/recipe-page';
 import Layout from './pages/layout';
 
 function App() {

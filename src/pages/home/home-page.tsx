@@ -5,7 +5,9 @@ import { useAccount } from 'jazz-tools/react';
 import { co, Group, z } from 'jazz-tools';
 import { assign, fromPromise, setup } from 'xstate';
 import { useMachine } from '@xstate/react';
-import { Link } from 'wouter';
+import { RecipeCard } from './recipe-card';
+import { Muted } from '@/components/ui/typography';
+import { Card } from '@/components/card';
 
 const useRecipes = () => {
   const { me } = useAccount(Account, {
@@ -21,42 +23,38 @@ const useRecipes = () => {
 };
 
 function RecipeList() {
-  const { me } = useAccount(Account);
+  // const { me } = useAccount(Account);
   const recipes = useRecipes();
 
-  const handleDeleteRecipe = (recipeId: string) => {
-    const index = recipes?.findIndex((recipe) => recipe.id === recipeId);
-    if (index !== undefined && index !== -1) {
-      recipes?.splice(index, 1);
-    }
-  };
+  // TODO: move into lib for recipe helper functions
+  // const handleDeleteRecipe = (recipeId: string) => {
+  //   const index = recipes?.findIndex((recipe) => recipe.id === recipeId);
+  //   if (index !== undefined && index !== -1) {
+  //     recipes?.splice(index, 1);
+  //   }
+  // };
 
-  const handleRetry = async (recipe: Recipe) => {
-    console.log('retry', recipe.id);
-    // fire off a call to the server to fetch the recipe
-    // don't need to wait for the response, just fire and forget
-    await fetch('/api/new-recipe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: recipe.url,
-        senderId: me?.id,
-        recipeId: recipe.id,
-      }),
-    });
-  };
+  // const handleRetry = async (recipe: Recipe) => {
+  //   console.log('retry', recipe.id);
+  //   // fire off a call to the server to fetch the recipe
+  //   // don't need to wait for the response, just fire and forget
+  //   await fetch('/api/new-recipe', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({
+  //       url: recipe.url,
+  //       senderId: me?.id,
+  //       recipeId: recipe.id,
+  //     }),
+  //   });
+  // };
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       {recipes?.map((recipe) => (
-        <div key={recipe.id}>
-          <Link to={`/recipes/${recipe.id}`}>{recipe.title || recipe.url}</Link>
-
-          <Button onClick={() => handleRetry(recipe)}>Retry</Button>
-          <Button onClick={() => handleDeleteRecipe(recipe.id)}>Delete</Button>
-        </div>
+        <RecipeCard key={recipe.id} recipe={recipe} />
       ))}
     </div>
   );
@@ -267,7 +265,7 @@ function AddRecipeForm() {
   );
 
   return (
-    <div className="flex flex-col gap-4 max-w-md w-full h-full p-4 bg-slate-100 rounded-lg">
+    <div className="flex flex-col gap-4 w-full h-full p-4 bg-slate-100 rounded-lg">
       <h1 className="text-2xl font-bold">Save Recipes</h1>
       <form
         className="flex flex-col gap-2"
@@ -290,7 +288,9 @@ function AddRecipeForm() {
           <p className="text-red-500">{snapshot.context.serverWorkerError}</p>
         )}
 
-        <Button type="submit">Add Recipe</Button>
+        <Button type="submit" disabled={snapshot.value.All === 'Error'}>
+          Add Recipe
+        </Button>
       </form>
     </div>
   );
@@ -298,16 +298,16 @@ function AddRecipeForm() {
 
 function HomePage() {
   return (
-    <div className="flex flex-col items-center w-full">
+    <div className="flex flex-col items-center w-full gap-4">
       {/* <AuthButton /> */}
       <AddRecipeForm />
-      <div className="flex flex-col gap-4 max-w-md w-full p-4 rounded-lg">
-        <RecipeList />
-      </div>
+      <RecipeList />
+
       {import.meta.env.DEV && (
-        <div className="flex flex-col gap-4 max-w-md w-full p-4 rounded-lg">
+        <Card className="mt-12">
+          <Muted>dev mode only</Muted>
           <ResetButton />
-        </div>
+        </Card>
       )}
     </div>
   );

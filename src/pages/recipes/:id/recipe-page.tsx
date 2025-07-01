@@ -1,7 +1,7 @@
 import { H1, H2, P } from '@/components/ui/typography';
 import { Recipe } from '@/schema';
 import { useCoState } from 'jazz-tools/react';
-import { useRoute } from 'wouter';
+import { Link, useRoute } from 'wouter';
 
 export default function RecipePage() {
   const [, params] = useRoute('/recipes/:id');
@@ -30,6 +30,18 @@ export default function RecipePage() {
       <P>{recipe?.description}</P>
       <P>{recipe?.author}</P>
       <P>{recipe?.source}</P>
+
+      <a
+        href={recipe.url.toString()}
+        className="text-sm hover:underline text-blue-500"
+        target="_blank"
+      >
+        View original recipe
+      </a>
+
+      <Link to="/" className="text-sm text-muted-foreground hover:underline">
+        Back to recipes
+      </Link>
     </div>
   );
 }
