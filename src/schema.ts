@@ -6,6 +6,11 @@ export const Recipe = co.map({
   description: z.optional(z.string()),
   firecrawlHtml: z.optional(z.string()),
 });
+
+// draft -> ready
+// ready -> success & data
+// ready -> error & data
+
 export type Recipe = co.loaded<typeof Recipe>;
 
 export const RecipeList = co.list(Recipe);
