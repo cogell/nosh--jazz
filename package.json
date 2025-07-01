@@ -14,7 +14,9 @@
     "test": "tsc -b"
   },
   "dependencies": {
+    "@langchain/openai": "^0.5.16",
     "@mendable/firecrawl-js": "^1.29.0",
+    "@radix-ui/react-progress": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@tailwindcss/vite": "^4.1.11",
     "@xstate/react": "^6.0.0",

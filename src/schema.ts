@@ -5,6 +5,10 @@ export const Recipe = co.map({
   title: z.optional(z.string()),
   description: z.optional(z.string()),
   firecrawlHtml: z.optional(z.string()),
+  ingredients: z.optional(z.string()),
+  instructions: z.optional(z.string()),
+  author: z.optional(z.string()),
+  source: z.optional(z.string()),
 });
 
 // draft -> ready

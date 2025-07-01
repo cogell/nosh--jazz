@@ -233,7 +233,7 @@ const machine = setup({
 });
 
 function AddRecipeForm() {
-  // const { me } = useAccount(Account);
+  const { me } = useAccount(Account);
   const recipes = useRecipes();
   const [snapshot, send] = useMachine(
     machine.provide({
@@ -250,17 +250,17 @@ function AddRecipeForm() {
           );
           recipes?.push(newRecipe);
 
-          // fetch('/api/new-recipe', {
-          //   method: 'POST',
-          //   headers: {
-          //     'Content-Type': 'application/json',
-          //   },
-          //   body: JSON.stringify({
-          //     url: snapshot.context.url,
-          //     senderId: me?.id,
-          //     recipeId: newRecipe.id,
-          //   }),
-          // });
+          fetch('/api/new-recipe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: snapshot.context.url,
+              senderId: me?.id,
+              recipeId: newRecipe.id,
+            }),
+          });
         },
       },
     }),
@@ -298,7 +298,7 @@ function AddRecipeForm() {
 
 function HomePage() {
   return (
-    <div className="flex flex-col px-4  min-h-screen h-full">
+    <div className="flex flex-col items-center w-full">
       {/* <AuthButton /> */}
       <AddRecipeForm />
       <div className="flex flex-col gap-4 max-w-md w-full p-4 rounded-lg">

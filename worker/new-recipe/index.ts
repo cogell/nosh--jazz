@@ -2,6 +2,7 @@ import { startWorker } from 'jazz-tools/worker';
 import { PureJSCrypto } from 'cojson/crypto/PureJSCrypto';
 import { Recipe } from '../../src/schema';
 import { scrapeUrl, type ScrapeResult } from './scrape-url';
+import { createRecipeDataNode } from './get-recipe-data';
 
 interface NewRecipeRequest {
   url: string;
@@ -82,8 +83,20 @@ export async function handleNewRecipe(request: Request, env: Env) {
       );
     }
 
-    recipe.title = 'updated from server worker';
+    // recipe.title = 'updated from server worker';
     recipe.firecrawlHtml = html;
+
+    const recipeData = await createRecipeDataNode({ env })({
+      htmlContent: html,
+    });
+
+    console.log('recipeData', recipeData);
+    recipe.title = recipeData.title;
+    recipe.ingredients = recipeData.ingredients;
+    recipe.instructions = recipeData.instructions;
+    recipe.description = recipeData.description;
+    recipe.author = recipeData.author;
+    recipe.source = recipeData.source;
 
     // TODO:
     // do I need to wait for this sync to complete?
