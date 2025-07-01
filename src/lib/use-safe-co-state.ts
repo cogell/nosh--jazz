@@ -11,6 +11,15 @@ import { useCoState } from 'jazz-tools/react';
 
 /* ---- helpers ----------------------------------------------------------- */
 
+/** Jazz primitives expose .valueOf() and .toJSON() – use whichever exists. */
+function toPlain(v: any) {
+  if (v && typeof v === 'object') {
+    if (typeof v.valueOf === 'function') return v.valueOf();
+    if (typeof v.toJSON === 'function') return v.toJSON();
+  }
+  return v;
+}
+
 /** Strip Zod wrappers (effects, default, brand, pipeline, lazy) until we
  *   reach the “real” schema. */
 function unwrap(schema: z.ZodTypeAny): z.ZodTypeAny {
@@ -35,15 +44,10 @@ function unwrap(schema: z.ZodTypeAny): z.ZodTypeAny {
   return schema;
 }
 
-/** Recursively copy `value`, replacing every invalid leaf with `null` while
- *   retaining full structure. */
 function sanitize(value: any, schema: z.ZodTypeAny): any {
   const base = unwrap(schema);
 
-  /* 1 — cheap exit: the entire branch is fine ---------------------------- */
-  if (base.safeParse(value).success) return value;
-
-  /* 2 — composites we can descend into ---------------------------------- */
+  /* 1 ─ composite nodes -------------------------------------------------- */
   if (base instanceof z.ZodObject) {
     const out: Record<string, any> = {};
     const shape = (base as z.AnyZodObject).shape;
@@ -54,23 +58,25 @@ function sanitize(value: any, schema: z.ZodTypeAny): any {
   }
 
   if (base instanceof z.ZodArray) {
-    return (value as any[] | undefined)?.map((v) => sanitize(v, base.element));
+    return (value as any[] | undefined)?.map((v) =>
+      sanitize(v, (base.element ?? (base as any)._def.type) as z.ZodTypeAny),
+    );
   }
 
   if (base instanceof z.ZodOptional || base instanceof z.ZodNullable) {
-    if (value == null) return value; // undefined / null already OK
-    return sanitize(value, base.unwrap());
+    return value == null ? value : sanitize(value, base.unwrap());
   }
 
   if (base instanceof z.ZodUnion) {
-    const match = base.options.find(
-      (opt: z.ZodTypeAny) => opt.safeParse(value).success,
+    const plain = toPlain(value);
+    const variant = base.options.find(
+      (opt: z.ZodTypeAny) => opt.safeParse(plain).success,
     );
-    return match ? value : null;
+    return variant ? plain : null;
   }
 
-  /* 3 — anything else is a primitive or unrecognised wrapper ------------ */
-  return null;
+  /* 2 ─ leaf  ----------------------------------------------------------- */
+  return base.safeParse(toPlain(value)).success ? toPlain(value) : null;
 }
 
 /* ---- the hook --------------------------------------------------------- */

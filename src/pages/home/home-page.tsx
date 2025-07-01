@@ -27,7 +27,7 @@ function RecipeList() {
   const recipes = useRecipes();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 w-full">
       {recipes?.map((recipe) => (
         <RecipeCard key={recipe.id} recipe={recipe} />
       ))}

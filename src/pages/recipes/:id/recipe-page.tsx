@@ -33,7 +33,9 @@ const InstructionList = ({ instructions }: { instructions: string[] }) => {
 
 export default function RecipePage() {
   const [, params] = useRoute('/recipes/:id');
-  const recipe = useCoState(Recipe, params?.id);
+  const recipe = useSafeCoState(Recipe, params?.id);
+
+  console.log('recipe', recipe);
 
   if (!recipe) {
     if (recipe === undefined) {
