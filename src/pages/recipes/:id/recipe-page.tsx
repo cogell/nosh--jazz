@@ -1,11 +1,18 @@
+import DevOnly from '@/components/dev-only';
+import { Button } from '@/components/ui/button';
 import { H1, H2, P } from '@/components/ui/typography';
-import { Recipe } from '@/schema';
-import { useCoState } from 'jazz-tools/react';
-import { Link, useRoute } from 'wouter';
+import { deleteRecipe, postNewRecipe } from '@/lib/recipe';
+import { useRecipes } from '@/lib/selectors';
+import { Account, Recipe } from '@/schema';
+import { useAccount, useCoState } from 'jazz-tools/react';
+import { Link, useRoute, useLocation } from 'wouter';
 
 export default function RecipePage() {
+  const { me } = useAccount(Account);
+  const recipes = useRecipes();
   const [, params] = useRoute('/recipes/:id');
   const recipe = useCoState(Recipe, params?.id);
+  const [, setLocation] = useLocation();
 
   if (!recipe) {
     if (recipe === undefined) {
@@ -42,6 +49,41 @@ export default function RecipePage() {
       <Link to="/" className="text-sm text-muted-foreground hover:underline">
         Back to recipes
       </Link>
+
+      <DevOnly>
+        <Button
+          onClick={() => postNewRecipe(me, recipe.url.toString(), recipe.id)}
+        >
+          Retry Server Worker
+        </Button>
+        <div className="flex flex-col gap-0">
+          <div>Server Worker</div>
+          <div className="pl-4 text-muted-foreground">
+            <div>Status: {recipe.serverWorkerStatus}</div>
+            <div>Error: {recipe.serverWorkerError}</div>
+            <div>Progress: {recipe.serverWorkerProgress?.toFixed(0)}%</div>
+          </div>
+        </div>
+        <div>
+          <details className="border rounded p-2">
+            <summary className="cursor-pointer font-medium">
+              Show Full HTML
+            </summary>
+            <pre className="mt-2 text-xs overflow-auto max-h-96 max-w-full bg-muted p-2 rounded">
+              {recipe.firecrawlHtml || 'No HTML available'}
+            </pre>
+          </details>
+        </div>
+        <Button
+          onClick={() => {
+            deleteRecipe(recipes || [], recipe.id);
+            setLocation('/');
+          }}
+          variant="destructive"
+        >
+          Delete Recipe
+        </Button>
+      </DevOnly>
     </div>
   );
 }

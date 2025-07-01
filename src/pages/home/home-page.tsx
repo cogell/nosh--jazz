@@ -8,6 +8,7 @@ import { useMachine } from '@xstate/react';
 import { RecipeCard } from './recipe-card';
 import { Muted } from '@/components/ui/typography';
 import { Card } from '@/components/card';
+import DevOnly from '@/components/dev-only';
 
 const useRecipes = () => {
   const { me } = useAccount(Account, {
@@ -23,33 +24,7 @@ const useRecipes = () => {
 };
 
 function RecipeList() {
-  // const { me } = useAccount(Account);
   const recipes = useRecipes();
-
-  // TODO: move into lib for recipe helper functions
-  // const handleDeleteRecipe = (recipeId: string) => {
-  //   const index = recipes?.findIndex((recipe) => recipe.id === recipeId);
-  //   if (index !== undefined && index !== -1) {
-  //     recipes?.splice(index, 1);
-  //   }
-  // };
-
-  // const handleRetry = async (recipe: Recipe) => {
-  //   console.log('retry', recipe.id);
-  //   // fire off a call to the server to fetch the recipe
-  //   // don't need to wait for the response, just fire and forget
-  //   await fetch('/api/new-recipe', {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify({
-  //       url: recipe.url,
-  //       senderId: me?.id,
-  //       recipeId: recipe.id,
-  //     }),
-  //   });
-  // };
 
   return (
     <div className="flex flex-col gap-4">
@@ -224,6 +199,10 @@ const machine = setup({
               actions: ['assignUrl', 'assignValidationError'],
             },
           },
+          always: {
+            target: 'Editing',
+            guard: 'isContextValid',
+          },
         },
       },
     },
@@ -281,6 +260,8 @@ function AddRecipeForm() {
           onChange={(e) => send({ type: 'update-url', value: e.target.value })}
           className="bg-white"
         />
+
+        {/* // TODO: show errors inside the button? */}
         {snapshot.context.urlError && (
           <p className="text-red-500">{snapshot.context.urlError}</p>
         )}
@@ -303,12 +284,9 @@ function HomePage() {
       <AddRecipeForm />
       <RecipeList />
 
-      {import.meta.env.DEV && (
-        <Card className="mt-12">
-          <Muted>dev mode only</Muted>
-          <ResetButton />
-        </Card>
-      )}
+      <DevOnly>
+        <ResetButton />
+      </DevOnly>
     </div>
   );
 }

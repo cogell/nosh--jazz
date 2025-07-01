@@ -1,7 +1,7 @@
 import { co, Group, z } from 'jazz-tools';
 
 export const Recipe = co.map({
-  url: z.url(), // FIXME: pay attention to how this works....
+  url: z.url(), // TODO: pay attention to how this works....
   title: z.optional(z.string()),
   description: z.optional(z.string()),
   firecrawlHtml: z.optional(z.string()),
@@ -9,11 +9,31 @@ export const Recipe = co.map({
   instructions: z.optional(z.string()),
   author: z.optional(z.string()),
   source: z.optional(z.string()),
+
+  serverWorkerStatus: z.optional(
+    z.enum(['ready', 'running', 'success', 'error']),
+  ),
+  serverWorkerError: z.optional(z.string()),
+  serverWorkerProgress: z.optional(z.number()),
 });
 
-// draft -> ready
-// ready -> success & data
-// ready -> error & data
+// const recipeStart = {
+//   serverWorkerStatus: 'ready',
+//   serverWorkerError: undefined,
+//   serverWorkerProgress: 0,
+// };
+
+// const recipeSuccess = {
+//   serverWorkerStatus: 'success',
+//   serverWorkerError: undefined,
+//   serverWorkerProgress: 100,
+// };
+
+// const recipeError: (error: string) => ({
+//   serverWorkerStatus: 'error',
+//   serverWorkerError: error,
+//   serverWorkerProgress: undefined,
+// });
 
 export type Recipe = co.loaded<typeof Recipe>;
 
@@ -37,6 +57,7 @@ export const Account = co
     root: Root,
     profile: Profile,
   })
+  // TODO: dont think any of this is happening.......
   .withMigration(async (acct) => {
     console.log('acct', acct);
     console.log('acct.root', acct.root);

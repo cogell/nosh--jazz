@@ -52,6 +52,11 @@ export async function handleNewRecipe(request: Request, env: Env) {
         { status: 404 },
       );
     }
+
+    recipe.serverWorkerStatus = 'running';
+    recipe.serverWorkerProgress = 0;
+    recipe.serverWorkerError = undefined;
+
     // check if we have a cached version of this url
     let scrapeResult: ScrapeResult | null = null;
     const cachedHtml = await env.MY_RECIPES_KV.get(url);
@@ -63,7 +68,9 @@ export async function handleNewRecipe(request: Request, env: Env) {
     }
 
     if (!scrapeResult?.success || !scrapeResult?.html) {
-      // TODO: posthog logging
+      recipe.serverWorkerStatus = 'error';
+      recipe.serverWorkerError =
+        'Failed to scrape url html - cedric has been notified';
       return Response.json(
         { success: false, error: 'Failed to scrape url' },
         { status: 500 },
@@ -75,16 +82,6 @@ export async function handleNewRecipe(request: Request, env: Env) {
       await env.MY_RECIPES_KV.put(url, html);
     }
 
-    // const recipe = await recipePromise;
-    if (!recipe) {
-      console.log('recipe not found');
-      return Response.json(
-        { success: false, error: 'Recipe not found' },
-        { status: 404 },
-      );
-    }
-
-    // recipe.title = 'updated from server worker';
     recipe.firecrawlHtml = html;
 
     const lfHandler = new CallbackHandler({
@@ -97,7 +94,20 @@ export async function handleNewRecipe(request: Request, env: Env) {
       htmlContent: html,
     });
 
-    console.log('recipeData', recipeData);
+    if (!recipeData.title) {
+      recipe.serverWorkerStatus = 'error';
+      recipe.serverWorkerError =
+        'Failed to read the recipe from the html - cedric has been notified';
+      return Response.json(
+        { success: false, error: 'Failed to get recipe data' },
+        { status: 500 },
+      );
+    }
+
+    recipe.serverWorkerStatus = 'success';
+    recipe.serverWorkerProgress = 100;
+    recipe.serverWorkerError = undefined;
+
     recipe.title = recipeData.title;
     recipe.ingredients = recipeData.ingredients;
     recipe.instructions = recipeData.instructions;

@@ -28,6 +28,7 @@
     "jazz-tools": "^0.15.4",
     "langfuse-langchain": "^3.37.6",
     "lucide-react": "^0.523.0",
+    "motion": "^12.22.0",
     "react": "^19.1.0",
     "react\n": "link:@xstate/react\n",
     "react-dom": "^19.1.0",

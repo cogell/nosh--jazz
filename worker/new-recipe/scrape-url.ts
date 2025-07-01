@@ -35,6 +35,7 @@ export async function scrapeUrl(url: string, env: Env): Promise<ScrapeResult> {
     const scrapeResponse = await app.scrapeUrl(url, {
       formats: ['html'],
       maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
+      proxy: 'auto',
     });
     console.log('firecrawlResponse', scrapeResponse);
 
