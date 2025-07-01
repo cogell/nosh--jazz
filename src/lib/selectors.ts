@@ -15,6 +15,9 @@ export const useRecipes = () => {
   return me?.root.recipes;
 };
 
+/**
+ * @deprecated Use useSafeCoState instead to avoid runtime errors from invalid data
+ */
 export const useRecipe = (id: string) => {
   return useCoState(Recipe, id);
 };

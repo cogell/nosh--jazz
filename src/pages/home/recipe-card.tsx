@@ -61,11 +61,10 @@ const ProgressBar = ({
         height: { duration: 0.3, ease: 'easeInOut' },
         opacity: { duration: 0.3, ease: 'easeInOut' },
       }}
-      // className="flex flex-col gap-0 px-4 py-2 rounded-tl-lg rounded-tr-lg border-b border-slate-200 bg-white mb-4"
     >
       <div
         ref={contentRef}
-        className="flex flex-col gap-0 px-4 py-2 rounded-tl-lg rounded-tr-lg border-b border-slate-200 bg-white"
+        className="flex flex-col gap-0 px-4 py-2 rounded-tl-lg rounded-tr-lg border-b border-slate-200 bg-slate-100"
       >
         <span className="text-sm">Reading thru the recipe</span>
         <div className="flex flex-row items-center gap-2">
@@ -107,7 +106,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
 
   return (
     <Link to={`/recipes/${recipe.id}`}>
-      <Card className="hover:bg-slate-100" noPadding>
+      <Card className="hover:bg-slate-100 bg-white" noPadding>
         {recipe.serverWorkerStatus === 'running' && (
           <ProgressBar
             progress={recipe.serverWorkerProgress}

@@ -27,8 +27,8 @@ You will return the cleaned recipe as a JSON object in this order:
 // TODO: fold into schema.ts
 export const RecipeData = z.object({
   title: z.string(),
-  ingredients: z.string(),
-  instructions: z.string(),
+  ingredients: z.array(z.string()),
+  instructions: z.array(z.string()),
   description: z.string(),
   author: z.string(),
   source: z.string(),
