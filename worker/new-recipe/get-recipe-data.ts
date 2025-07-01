@@ -1,7 +1,7 @@
+import { CallbackHandler } from 'langfuse-langchain';
 import { z } from 'zod';
 import { ChatOpenAI } from '@langchain/openai';
 import { models } from '../_lib/models';
-// import type { CallbackHandler } from 'langfuse-langchain';
 
 const systemPrompt = `
 You are a helpful assistant that pulls out the recipe from a block of markdown.
@@ -38,16 +38,16 @@ export type RecipeData = z.infer<typeof RecipeData>;
 
 export function createRecipeDataNode({
   env,
-}: // lfHandler,
-{
+  lfHandler,
+}: {
   env: Env;
-  // lfHandler: CallbackHandler;
+  lfHandler: CallbackHandler;
 }) {
   const llm = new ChatOpenAI({
     openAIApiKey: env.OPENAI_API_KEY,
     modelName: models.openai.gpt41Mini.fullName,
     temperature: 0,
-    // callbacks: [lfHandler],
+    callbacks: [lfHandler],
   });
 
   const llmWithStructuredOutput = llm.withStructuredOutput(RecipeData);

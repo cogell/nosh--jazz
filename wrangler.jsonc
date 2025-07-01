@@ -38,7 +38,9 @@
    * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
    */
   "vars": {
-    "JAZZ_WORKER_ACCOUNT": "co_z3d4sPq1JLm7FarTXhvk9mVYv84"
+    "JAZZ_WORKER_ACCOUNT": "co_z3d4sPq1JLm7FarTXhvk9mVYv84",
+    "LANGFUSE_PUBLIC_KEY": "pk-lf-d28d8c85-9b78-498b-9934-e79be9408b71",
+    "LANGFUSE_BASEURL": "https://us.cloud.langfuse.com"
   }
   /**
    * Note: Use secrets to store sensitive data.

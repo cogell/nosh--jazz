@@ -1,9 +1,10 @@
 import { startWorker } from 'jazz-tools/worker';
 import { PureJSCrypto } from 'cojson/crypto/PureJSCrypto';
+import { CallbackHandler } from 'langfuse-langchain';
+
 import { Recipe } from '../../src/schema';
 import { scrapeUrl, type ScrapeResult } from './scrape-url';
 import { createRecipeDataNode } from './get-recipe-data';
-
 interface NewRecipeRequest {
   url: string;
   senderId: string;
@@ -86,7 +87,13 @@ export async function handleNewRecipe(request: Request, env: Env) {
     // recipe.title = 'updated from server worker';
     recipe.firecrawlHtml = html;
 
-    const recipeData = await createRecipeDataNode({ env })({
+    const lfHandler = new CallbackHandler({
+      publicKey: env.LANGFUSE_PUBLIC_KEY,
+      secretKey: env.LANGFUSE_SECRET_KEY,
+      baseUrl: env.LANGFUSE_BASEURL,
+    });
+
+    const recipeData = await createRecipeDataNode({ env, lfHandler })({
       htmlContent: html,
     });
 

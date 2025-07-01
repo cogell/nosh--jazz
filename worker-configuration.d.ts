@@ -8,6 +8,9 @@ declare namespace Cloudflare {
     JAZZ_WORKER_SECRET: string;
     FIRECRAWL_API_KEY: string;
     OPENAI_API_KEY: string;
+    LANGFUSE_PUBLIC_KEY: string;
+    LANGFUSE_SECRET_KEY: string;
+    LANGFUSE_BASEURL: string;
   }
 }
 interface Env extends Cloudflare.Env {}
@@ -21,7 +24,12 @@ declare namespace NodeJS {
     extends StringifyValues<
       Pick<
         Cloudflare.Env,
-        'JAZZ_WORKER_ACCOUNT' | 'JAZZ_WORKER_SECRET' | 'FIRECRAWL_API_KEY'
+        | 'JAZZ_WORKER_ACCOUNT'
+        | 'JAZZ_WORKER_SECRET'
+        | 'FIRECRAWL_API_KEY'
+        | 'LANGFUSE_PUBLIC_KEY'
+        | 'LANGFUSE_SECRET_KEY'
+        | 'LANGFUSE_BASEURL'
       >
     > {}
 }
