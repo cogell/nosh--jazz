@@ -24,6 +24,7 @@
     "clsx": "^2.1.1",
     "cojson": "^0.15.4",
     "cojson-transport-ws": "^0.15.4",
+    "effect": "^3.16.11",
     "husky": "^9.1.7",
     "jazz-tools": "^0.15.4",
     "langfuse-langchain": "^3.37.6",

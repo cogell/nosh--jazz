@@ -40,7 +40,8 @@
   "vars": {
     "JAZZ_WORKER_ACCOUNT": "co_z3d4sPq1JLm7FarTXhvk9mVYv84",
     "LANGFUSE_PUBLIC_KEY": "pk-lf-d28d8c85-9b78-498b-9934-e79be9408b71",
-    "LANGFUSE_BASEURL": "https://us.cloud.langfuse.com"
+    "LANGFUSE_BASEURL": "https://us.cloud.langfuse.com",
+    "JAZZ_WORKER_SYNC_SERVER": "wss://cloud.jazz.tools/?key=cedric.cogell@gmail.com"
   }
   /**
    * Note: Use secrets to store sensitive data.

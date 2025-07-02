@@ -1,4 +1,5 @@
 import FirecrawlApp from '@mendable/firecrawl-js';
+import { Data, Effect } from 'effect';
 
 export interface ScrapeResult {
   html: string | null;
@@ -15,18 +16,36 @@ export class ScrapingError extends Error {
   }
 }
 
+class FirecrawlInitError extends Data.TaggedError('FirecrawlInitError')<{
+  cause: unknown;
+}> {}
+
+function initFirecrawl(env: Env) {
+  return Effect.tryPromise({
+    try: async () => new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY }),
+    catch: (error) => new FirecrawlInitError({ cause: error }),
+  });
+}
+
 /**
  * Scrapes the given URL using FirecrawlApp and returns the result.
  * Falls back to a failure result if any step errors.
  */
 export async function scrapeUrl(url: string, env: Env): Promise<ScrapeResult> {
-  let app: FirecrawlApp;
+  // let app: FirecrawlApp;
 
-  // Initialize the FirecrawlApp
-  try {
-    app = new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY });
-  } catch (error) {
-    console.error('Failed to initialize FirecrawlApp', error);
+  const app = await Effect.runPromise(
+    initFirecrawl(env).pipe(
+      Effect.catchTags({
+        FirecrawlInitError: (error) => {
+          console.error('Failed to initialize FirecrawlApp', error);
+          return Effect.succeed(null);
+        },
+      }),
+    ),
+  );
+
+  if (!app) {
     return { html: null, success: false };
   }
 

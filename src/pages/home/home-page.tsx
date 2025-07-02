@@ -20,15 +20,20 @@ const useRecipes = () => {
       },
     },
   });
+
   return me?.root.recipes;
 };
 
 function RecipeList() {
   const recipes = useRecipes();
 
+  const sortedRecipes = [...(recipes ?? [])].sort(
+    (a, b) => b._createdAt - a._createdAt,
+  );
+
   return (
     <div className="flex flex-col gap-4 w-full">
-      {recipes?.map((recipe) => (
+      {sortedRecipes?.map((recipe) => (
         <RecipeCard key={recipe.id} recipe={recipe} />
       ))}
     </div>

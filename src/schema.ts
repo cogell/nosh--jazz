@@ -40,6 +40,7 @@ export const Recipe = co.map({
 export type Recipe = co.loaded<typeof Recipe>;
 
 export const RecipeList = co.list(Recipe);
+export type RecipeList = co.loaded<typeof RecipeList>;
 
 export const Root = co.map({
   recipes: RecipeList,

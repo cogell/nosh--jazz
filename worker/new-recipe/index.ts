@@ -1,10 +1,10 @@
-import { startWorker } from 'jazz-tools/worker';
-import { PureJSCrypto } from 'cojson/crypto/PureJSCrypto';
 import { CallbackHandler } from 'langfuse-langchain';
+import { ConfigProvider, Data, Effect } from 'effect';
 
 import { Recipe } from '../../src/schema';
 import { scrapeUrl, type ScrapeResult } from './scrape-url';
 import { createRecipeDataNode } from './get-recipe-data';
+import { startJazzWorker } from '../_lib/start-jazz-worker';
 interface NewRecipeRequest {
   url: string;
   senderId: string;
@@ -31,19 +31,35 @@ export async function handleNewRecipe(request: Request, env: Env) {
 
     console.log('senderId', senderId, 'recipeId', recipeId);
 
-    // used implicitly
-    await startWorker({
-      accountID: env.JAZZ_WORKER_ACCOUNT,
-      accountSecret: env.JAZZ_WORKER_SECRET,
-      // TODO: env var
-      syncServer: 'wss://cloud.jazz.tools/?key=cedric.cogell@gmail.com',
-      // @ts-ignore: https://github.com/garden-co/jazz/blob/fa1b302474d978e1cf8d1ccc7a4f94288626955b/tests/cloudflare-workers/src/index.ts#L30
-      crypto: await PureJSCrypto.create(),
-    });
+    const jazzWorker = await Effect.runPromise(
+      Effect.withConfigProvider(
+        startJazzWorker().pipe(
+          Effect.catchTags({
+            JazzWorkerStartError: (error) => {
+              console.error('Failed to start Jazz worker', error);
+              return Effect.succeed(null);
+            },
+            JazzWorkerCryptoError: (error) => {
+              console.error('Failed to create crypto', error);
+              return Effect.succeed(null);
+            },
+          }),
+        ),
+        ConfigProvider.fromJson(env),
+      ),
+    );
+
+    if (!jazzWorker) {
+      return Response.json(
+        { success: false, error: 'Failed to start Jazz worker' },
+        { status: 500 },
+      );
+    }
 
     // WHY BLOCKING?
     // the Jazz server is semi-reliable, so we wanna make sure we have the recipe here before doing any hard work
-    // TODO: implement a retry mechanism
+    // TODO: implement a retry mechanism?
+    // TODO: recipe is not insured to be correctly shaped
     const recipe = await Recipe.load(recipeId);
     if (!recipe) {
       console.log('recipe not found');
