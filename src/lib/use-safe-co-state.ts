@@ -1,85 +1,120 @@
 import * as React from 'react';
 import {
-  // z,
+  z,
   type CoValueOrZodSchema,
   type ResolveQuery,
   type ResolveQueryStrict,
   type Loaded,
 } from 'jazz-tools';
-import { z } from 'zod';
+import type { ZodTypeAny, AnyZodObject } from 'zod';
 import { useCoState } from 'jazz-tools/react';
 
-/* ---- helpers ----------------------------------------------------------- */
+/* -------------------------------------------------- helpers ------------ */
 
-/** Jazz primitives expose .valueOf() and .toJSON() – use whichever exists. */
-function toPlain(v: any) {
-  if (v && typeof v === 'object') {
-    if (typeof v.valueOf === 'function') return v.valueOf();
-    if (typeof v.toJSON === 'function') return v.toJSON();
-  }
-  return v;
+const T = {
+  // v4/v5 compatibility
+  ZodObject: 'ZodObject',
+  ZodArray: 'ZodArray',
+  ZodOptional: 'ZodOptional',
+  ZodNullable: 'ZodNullable',
+  ZodUnion: 'ZodUnion',
+  ZodEffects: 'ZodEffects',
+  ZodDefault: 'ZodDefault',
+  ZodBranded: 'ZodBranded',
+  ZodPipeline: 'ZodPipeline',
+  ZodLazy: 'ZodLazy',
+};
+
+/** Runtime tag helper */
+function kind(s: ZodTypeAny): string {
+  const def = (s as any)._def;
+  /* 1️⃣  official field in full Zod builds (v4 & v5) */
+  if (def?.typeName) return def.typeName;
+
+  /* 2️⃣  Jazz’s slimmer build stores it in `t`            */
+  if (def?.t) return def.t;
+
+  /* 3️⃣  fall-back to constructor name                    */
+  return (s as any).constructor?.name;
 }
 
-/** Strip Zod wrappers (effects, default, brand, pipeline, lazy) until we
- *   reach the “real” schema. */
-function unwrap(schema: z.ZodTypeAny): z.ZodTypeAny {
-  // eslint-disable-next-line no-constant-condition
+/** Jazz primitives expose .valueOf() / .toJSON() */
+const toPlain = (v: any) =>
+  v && typeof v === 'object'
+    ? typeof v.valueOf === 'function'
+      ? v.valueOf()
+      : typeof v.toJSON === 'function'
+      ? v.toJSON()
+      : v
+    : v;
+
+/** Recursively unwrap decorator nodes */
+function unwrap(schema: ZodTypeAny): ZodTypeAny {
   while (
-    schema instanceof z.ZodEffects ||
-    schema instanceof z.ZodDefault ||
-    schema instanceof z.ZodBranded ||
-    schema instanceof z.ZodPipeline ||
-    schema instanceof z.ZodLazy
+    [
+      T.ZodEffects,
+      T.ZodDefault,
+      T.ZodBranded,
+      T.ZodPipeline,
+      T.ZodLazy,
+    ].includes(kind(schema))
   ) {
-    // effects / pipeline / brand keep their child schema in _def.schema
-    // default keeps it in .removeDefault().schema
-    // lazy stores a getter
     schema =
-      schema instanceof z.ZodLazy
-        ? schema.schema
-        : 'schema' in (schema as any)._def
+      kind(schema) === T.ZodLazy
+        ? (schema as any).schema
+        : '_def' in schema && 'schema' in (schema as any)._def
         ? (schema as any)._def.schema
-        : (schema as z.ZodDefault<any>).removeDefault();
+        : (schema as any).removeDefault?.();
   }
   return schema;
 }
 
-function sanitize(value: any, schema: z.ZodTypeAny): any {
+/** Replace invalid leaves with null, preserve structure. */
+function sanitize(value: any, schema: ZodTypeAny): any {
   const base = unwrap(schema);
 
-  /* 1 ─ composite nodes -------------------------------------------------- */
-  if (base instanceof z.ZodObject) {
-    const out: Record<string, any> = {};
-    const shape = (base as z.AnyZodObject).shape;
-    for (const key of Object.keys(shape)) {
-      out[key] = sanitize(value?.[key], shape[key]);
+  /* Fast path: whole subtree valid */
+  if (base.safeParse(toPlain(value)).success) return value;
+
+  console.log('base', base);
+  console.log('kind', kind(base));
+
+  switch (kind(base)) {
+    case T.ZodObject: {
+      console.log('ZodObject', base);
+      const out: Record<string, any> = {};
+      const shape = (base as AnyZodObject).shape;
+      for (const key of Object.keys(shape)) {
+        out[key] = sanitize(value?.[key], shape[key]);
+      }
+      return out;
     }
-    return out;
-  }
 
-  if (base instanceof z.ZodArray) {
-    return (value as any[] | undefined)?.map((v) =>
-      sanitize(v, (base.element ?? (base as any)._def.type) as z.ZodTypeAny),
-    );
-  }
+    case T.ZodArray: {
+      const el = (base as any)._def.type ?? (base as any).element;
+      if (value == null || typeof (value as any).map !== 'function')
+        return null;
+      return (value as any[] | undefined)?.map((v) => sanitize(v, el));
+    }
 
-  if (base instanceof z.ZodOptional || base instanceof z.ZodNullable) {
-    return value == null ? value : sanitize(value, base.unwrap());
-  }
+    case T.ZodOptional:
+    case T.ZodNullable:
+      return value == null ? value : sanitize(value, (base as any).unwrap());
 
-  if (base instanceof z.ZodUnion) {
-    const plain = toPlain(value);
-    const variant = base.options.find(
-      (opt: z.ZodTypeAny) => opt.safeParse(plain).success,
-    );
-    return variant ? plain : null;
-  }
+    case T.ZodUnion: {
+      const plain = toPlain(value);
+      const match = (base as any)._def.options.find(
+        (opt: ZodTypeAny) => opt.safeParse(plain).success,
+      );
+      return match ? plain : null;
+    }
 
-  /* 2 ─ leaf  ----------------------------------------------------------- */
-  return base.safeParse(toPlain(value)).success ? toPlain(value) : null;
+    default:
+      return null; // primitive or unsupported wrapper
+  }
 }
 
-/* ---- the hook --------------------------------------------------------- */
+/* -------------------------------------------------- the hook ----------- */
 
 export function useSafeCoState<
   S extends CoValueOrZodSchema,
@@ -89,10 +124,10 @@ export function useSafeCoState<
   id: string | undefined,
   options?: { resolve?: ResolveQueryStrict<S, R> },
 ): Loaded<S, R> | undefined | null {
-  const raw = useCoState(Schema, id, options); // native Jazz hook
+  const raw = useCoState(Schema, id, options); // live Jazz subscription
 
   return React.useMemo(() => {
-    if (raw == null) return raw; // loading / not found
-    return sanitize(raw, Schema as unknown as z.ZodTypeAny);
+    if (raw == null) return raw;
+    return sanitize(raw, Schema as unknown as ZodTypeAny);
   }, [raw, Schema]);
 }

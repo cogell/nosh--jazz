@@ -1,6 +1,8 @@
 import { co, Group, z } from 'jazz-tools';
 
 export const Recipe = co.map({
+  schemaVersion: z.optional(z.literal(1)),
+
   url: z.url(), // TODO: pay attention to how this works....
   title: z.optional(z.string()),
   description: z.optional(z.string()),
@@ -59,8 +61,21 @@ export const Account = co
   })
   // TODO: dont think any of this is happening.......
   .withMigration(async (acct) => {
-    console.log('acct', acct);
-    console.log('acct.root', acct.root);
+    if (acct.root?.recipes) {
+      for (const recipe of acct.root.recipes) {
+        console.log('recipe erhejhbarg?');
+        if (recipe === null) {
+          continue;
+        }
+
+        if (recipe.schemaVersion === undefined) {
+          recipe.schemaVersion = 1;
+          recipe.ingredients = [];
+          recipe.instructions = [];
+        }
+      }
+    }
+
     if (acct.root === undefined) {
       const recipesList = RecipeList.create([], { owner: acct });
       const ownerGroup = recipesList._owner.castAs(Group);

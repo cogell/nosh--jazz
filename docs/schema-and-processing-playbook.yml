@@ -1,0 +1,36 @@
+# Schema and Processing Playbook
+
+## 1. model the server tasks in the schema
+
+- taskStatus: 'draft' | 'queued' | 'running' | 'completed' | 'failed'
+- processedVersion: 1 | 2 | 3 | ...
+- lastProcessedAt: DateTime
+- attemptCount: number
+
+- [ ] setup a mechanism to queue up server tasks -> see #3
+
+## 2. schema-change guidelines
+
+| when you... | then you... | because... |
+| ------------ | ----------- | ----------- |
+| add a new field | make it optional | keeps old clients work |
+| need a breaking change | increment the schema version and write a migration | allows code to distinguish between old and new data |
+| need heavy recompute | bump `processedVersion` and `taskStatus` | keeps client migrations synchronous and lets server handle the heavy lifting |
+
+### Golden rules
+
+- **add, don't mutate** prefer new optional fields to renames whenever possible
+- **keep migrations small & pure** no network. no heavy cpu. just move data or flag work for the server to do
+- **version everything on the client** then the server tasks can safely ignore items already processed
+
+## 3. running and re-running server tasks
+
+- [ ] consider how best to accomplish this simply... 
+  - simple: run client checks for 'queued' after migrations 
+  - complex: cloudflare durable objects + queues + workers...
+
+## 4. Possible Checklist for every PR that touches schemas
+
+- [ ] continue here....
+ 
+

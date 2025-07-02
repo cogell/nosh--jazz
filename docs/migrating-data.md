@@ -1,5 +1,11 @@
 # Migrating Data
 
+## Schema Changes Queuing up new Server Worker Tasks!!!
+
+when a recipe schema is updated, we may need to queue up a new server worker task to gather new data
+
+- (whatever we use to queue up server tasks after offline could work here too)
+
 ## Actions that DON'T require a migration
 
 - if you add a new field to the schema, you need to migrate the data
@@ -26,7 +32,7 @@
 
 - either way, we might need to have run time zod validations...
 
-## ✅ Save yourself from crashing
+## Save yourself from crashing -> create a useSafeCoState hook
 
 - create a useSafeCoState hook - this will only return data that matches the schema
   - this will force any bad data to never reach the client code
