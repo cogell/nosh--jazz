@@ -1,4 +1,5 @@
 import { Card, CARD_PADDING_CLASS } from '@/components/card';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { H3, Muted } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
@@ -135,12 +136,9 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
           <div className="flex flex-row gap-2 items-end">
             <div className="flex-1 flex flex-row gap-2 flex-wrap">
               {recipe.tags?.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-sm text-muted-foreground bg-slate-100 rounded-xs px-2 py-1"
-                >
+                <Badge key={tag} variant="secondary">
                   {tag}
-                </span>
+                </Badge>
               ))}
             </div>
             <AuthorSource author={recipe.author} source={recipe.source} />

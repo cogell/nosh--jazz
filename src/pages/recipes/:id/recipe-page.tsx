@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import DevStuff from './dev-stuff';
 import { H1, H2, P } from '@/components/ui/typography';
 import { useSafeCoState } from '@/lib/use-safe-co-state';
@@ -47,6 +48,13 @@ export default function RecipePage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 pt-8">
       <H1>{recipe?.title || recipe?.url.toString()}</H1>
+      <div className="flex flex-row gap-2">
+        {recipe?.tags?.map((tag) => (
+          <Badge key={tag} variant="secondary">
+            {tag}
+          </Badge>
+        ))}
+      </div>
       {/* <div>{recipe?.firecrawlHtml}</div> */}
       <IngredientList ingredients={recipe?.ingredients || []} />
       <InstructionList instructions={recipe?.instructions || []} />
