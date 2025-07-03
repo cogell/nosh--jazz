@@ -268,11 +268,6 @@ function AddRecipeForm() {
 }
 
 function HomePage() {
-  const { me } = useAccount(Account);
-  const tags = me?.root?.tags;
-
-  console.log('tags', tags);
-
   return (
     <div className="flex flex-col items-center w-full gap-4">
       {/* <AuthButton /> */}

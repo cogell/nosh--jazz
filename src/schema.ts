@@ -59,11 +59,14 @@ export const Root = co.map({
   tags: Tags,
 });
 const makeInitialRoot = (ownerGroup: Group) =>
-  Root.create({
-    schemaVersion: ROOT_CURRENT_SCHEMA_VERSION,
-    recipes: RecipeList.create([], ownerGroup),
-    tags: makeInitialTags(ownerGroup),
-  });
+  Root.create(
+    {
+      schemaVersion: ROOT_CURRENT_SCHEMA_VERSION,
+      recipes: RecipeList.create([], ownerGroup),
+      tags: makeInitialTags(ownerGroup),
+    },
+    ownerGroup,
+  );
 
 export const Profile = co.map({
   name: z.string(),
@@ -92,6 +95,19 @@ export const Account = co
   })
   .withMigration(async (acct) => {
     console.log('withMigration running!');
+
+    if (acct.root?.schemaVersion === undefined) {
+      const oldRecipes = acct.root?.recipes;
+      console.log('oldRecipes', oldRecipes);
+      const ownerGroup = await makeOwnerGroup();
+      acct.root = makeInitialRoot(ownerGroup);
+      if (oldRecipes) {
+        console.log('migrating old recipes');
+        oldRecipes.forEach((recipe) => {
+          acct.root?.recipes?.push(recipe);
+        });
+      }
+    }
 
     if (acct.root === undefined) {
       const ownerGroup = await makeOwnerGroup();
