@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Account, Recipe } from '@/schema';
+import { Account, Recipe, RECIPE_CURRENT_SCHEMA_VERSION } from '@/schema';
 import { useAccount } from 'jazz-tools/react';
 import { co, Group, z } from 'jazz-tools';
 import { assign, fromPromise, setup } from 'xstate';
@@ -9,20 +9,8 @@ import { RecipeCard } from './recipe-card';
 import { Muted } from '@/components/ui/typography';
 import { Card } from '@/components/card';
 import DevOnly from '@/components/dev-only';
-
-const useRecipes = () => {
-  const { me } = useAccount(Account, {
-    resolve: {
-      root: {
-        recipes: {
-          $each: true,
-        },
-      },
-    },
-  });
-
-  return me?.root.recipes;
-};
+import { postNewRecipe } from '@/lib/recipe';
+import { useRecipes, useTags } from '@/lib/selectors';
 
 function RecipeList() {
   const recipes = useRecipes();
@@ -217,6 +205,8 @@ const machine = setup({
 function AddRecipeForm() {
   const { me } = useAccount(Account);
   const recipes = useRecipes();
+  const tags = useTags();
+
   const [snapshot, send] = useMachine(
     machine.provide({
       actions: {
@@ -226,23 +216,18 @@ function AddRecipeForm() {
           ownerGroup.addMember(context.serverWorker, 'writer');
           const newRecipe = Recipe.create(
             {
+              schemaVersion: RECIPE_CURRENT_SCHEMA_VERSION,
               url: context.url,
             },
             ownerGroup,
           );
-          recipes?.push(newRecipe);
+          me?.root?.recipes?.push(newRecipe);
 
-          fetch('/api/new-recipe', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              url: snapshot.context.url,
-              senderId: me?.id,
-              recipeId: newRecipe.id,
-            }),
-          });
+          if (!me || !me.root?.tags) {
+            throw new Error('No account or tags found');
+          }
+
+          postNewRecipe(me, snapshot.context.url, newRecipe.id, me.root.tags);
         },
       },
     }),
@@ -283,6 +268,11 @@ function AddRecipeForm() {
 }
 
 function HomePage() {
+  const { me } = useAccount(Account);
+  const tags = me?.root?.tags;
+
+  console.log('tags', tags);
+
   return (
     <div className="flex flex-col items-center w-full gap-4">
       {/* <AuthButton /> */}

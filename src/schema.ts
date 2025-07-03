@@ -1,7 +1,9 @@
 import { co, Group, z } from 'jazz-tools';
 
+export const RECIPE_CURRENT_SCHEMA_VERSION = 1;
+
 export const Recipe = co.map({
-  schemaVersion: z.optional(z.literal(1)),
+  schemaVersion: z.number(),
 
   url: z.url(), // TODO: pay attention to how this works....
   title: z.optional(z.string()),
@@ -11,6 +13,8 @@ export const Recipe = co.map({
   instructions: z.optional(z.array(z.string())),
   author: z.optional(z.string()),
   source: z.optional(z.string()),
+
+  tags: z.optional(z.array(z.string())),
 
   serverWorkerStatus: z.optional(
     z.enum(['ready', 'running', 'success', 'error']),
@@ -42,70 +46,61 @@ export type Recipe = co.loaded<typeof Recipe>;
 export const RecipeList = co.list(Recipe);
 export type RecipeList = co.loaded<typeof RecipeList>;
 
+// not sure it needs to be a co.list for our uses...
+export const Tags = co.list(z.string());
+export type Tags = co.loaded<typeof Tags>;
+const makeInitialTags = (ownerGroup: Group) =>
+  Tags.create(['Dinner', 'Lunch', 'Breakfast', 'Dessert', 'Snack'], ownerGroup);
+
+const ROOT_CURRENT_SCHEMA_VERSION = 1;
 export const Root = co.map({
+  schemaVersion: z.number(),
   recipes: RecipeList,
+  tags: Tags,
 });
+const makeInitialRoot = (ownerGroup: Group) =>
+  Root.create({
+    schemaVersion: ROOT_CURRENT_SCHEMA_VERSION,
+    recipes: RecipeList.create([], ownerGroup),
+    tags: makeInitialTags(ownerGroup),
+  });
 
 export const Profile = co.map({
   name: z.string(),
 });
+const makeInitialProfile = () =>
+  Profile.create({
+    name: 'Anon',
+  });
 
-// export const GroupWithServerWorker = co.group({
-//   serverWorker: z.string(),
-// });
+const makeOwnerGroup = async () => {
+  const serverWorker = await co
+    .account()
+    .load(import.meta.env.VITE_JAZZ_WORKER_ACCOUNT);
+  if (!serverWorker) {
+    throw new Error('Server worker not found');
+  }
+  const ownerGroup = Group.create();
+  ownerGroup.addMember(serverWorker, 'writer');
+  return ownerGroup;
+};
 
-// root + profile
 export const Account = co
   .account({
     root: Root,
     profile: Profile,
   })
-  // TODO: dont think any of this is happening.......
   .withMigration(async (acct) => {
-    if (acct.root?.recipes) {
-      for (const recipe of acct.root.recipes) {
-        console.log('recipe erhejhbarg?');
-        if (recipe === null) {
-          continue;
-        }
-
-        if (recipe.schemaVersion === undefined) {
-          recipe.schemaVersion = 1;
-          recipe.ingredients = [];
-          recipe.instructions = [];
-        }
-      }
-    }
+    console.log('withMigration running!');
 
     if (acct.root === undefined) {
-      const recipesList = RecipeList.create([], { owner: acct });
-      const ownerGroup = recipesList._owner.castAs(Group);
-      ownerGroup.addMember(acct, 'admin');
-      console.log('ownerGroup', ownerGroup);
-      console.log('acct', acct);
-      console.log('import.meta.env', import.meta.env);
-      const workerID = import.meta.env.VITE_JAZZ_WORKER_ACCOUNT || '';
-      if (workerID) {
-        console.log('workerID', workerID);
-        const workerAccount = await co.account().load(workerID);
-        console.log('workerAccount', workerAccount);
-        if (workerAccount) {
-          console.log('adding worker to group', workerAccount);
-          ownerGroup.addMember(workerAccount, 'writer');
-        }
-      }
-      // ownerGroup.addMember(process.env.JAZZ_WORKER_ACCOUNT, 'writer');
-      // console.log('me', me);
-
-      acct.root = Root.create({
-        recipes: recipesList,
-      });
+      const ownerGroup = await makeOwnerGroup();
+      acct.root = makeInitialRoot(ownerGroup);
     }
     if (acct.profile === undefined) {
-      acct.profile = Profile.create({
-        name: 'Anon',
-      });
+      acct.profile = makeInitialProfile();
     }
+
     return acct;
   });
 

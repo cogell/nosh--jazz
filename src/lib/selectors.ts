@@ -21,3 +21,12 @@ export const useRecipes = () => {
 export const useRecipe = (id: string) => {
   return useCoState(Recipe, id);
 };
+
+export const useTags = () => {
+  const { me } = useAccount(Account, {
+    resolve: {
+      root: { tags: { $each: true } },
+    },
+  });
+  return me?.root?.tags;
+};

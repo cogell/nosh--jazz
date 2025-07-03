@@ -47,6 +47,9 @@ importers:
       jazz-tools:
         specifier: ^0.15.4
         version: 0.15.4(@tiptap/pm@2.22.3)(csstype@3.1.3)(expo-file-system@18.1.10(expo@53.0.12(@babel/core@7.27.7)(react-native@0.80.0(@babel/core@7.27.7)(@types/react@19.1.8)(react@19.1.0))(react@19.1.0))(react-native@0.80.0(@babel/core@7.27.7)(@types/react@19.1.8)(react@19.1.0)))(expo@53.0.12(@babel/core@7.27.7)(react-native@0.80.0(@babel/core@7.27.7)(@types/react@19.1.8)(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react-native@0.80.0(@babel/core@7.27.7)(@types/react@19.1.8)(react@19.1.0))(react@19.1.0)
+      langfuse:
+        specifier: ^3.38.1
+        version: 3.38.1
       langfuse-langchain:
         specifier: ^3.37.6
         version: 3.37.6(langchain@0.3.29(@langchain/core@0.3.61(@opentelemetry/api@1.9.0)(openai@5.8.2(ws@8.18.2)(zod@3.25.67)))(@opentelemetry/api@1.9.0)(axios@1.10.0)(openai@5.8.2(ws@8.18.2)(zod@3.25.67))(ws@8.18.2))
@@ -3309,14 +3312,18 @@ packages:
     resolution: {integrity: sha512-R38t3tazFoRNIJGzgJljmKXm94KJtusPGHwa5c0uc2duK/SRqHyFbWj5Bpj0Z7AnbNjbT5U6AgNH2OAZb1bksQ==}
     engines: {node: '>=18'}
 
+  langfuse-core@3.38.1:
+    resolution: {integrity: sha512-qZsHZZ05eHv+EQoPmfrm6bWUflzvlCSAfT8EP1PP1WeHSwEcwT4p7qAs9H0EnWcUtm0dAdyd6U75HGWu3/ETUA==}
+    engines: {node: '>=18'}
+
   langfuse-langchain@3.37.6:
     resolution: {integrity: sha512-3SaTB1uh/KuAwDy0prd6ZzjpuskCuiL/UIk/g6Y5kiBY3rhlS+gBvFb1WoMMquXPoSvUGPWg0osFO0j9AvHcUQ==}
     engines: {node: '>=18'}
     peerDependencies:
       langchain: '>=0.0.157 <0.4.0'
 
-  langfuse@3.37.6:
-    resolution: {integrity: sha512-szgdHwh4YbnZIvCGs/pVoSR+4RnRYuutCRL/F36RdqutX2DCDu3ep14I/9DsnEKVKbiWbA/kILYeDnDBJ8OsKg==}
+  langfuse@3.38.1:
+    resolution: {integrity: sha512-rv0x+NWi4JDN8KUyGcl8JQ7xmM/0UBXEcYmtBR+msLLImsM3I07CPE6imp3N2I4AbByPNKF4IU8Kq/LFS3D34A==}
     engines: {node: '>=18'}
 
   langsmith@0.3.36:
@@ -8297,15 +8304,19 @@ snapshots:
     dependencies:
       mustache: 4.2.0
 
+  langfuse-core@3.38.1:
+    dependencies:
+      mustache: 4.2.0
+
   langfuse-langchain@3.37.6(langchain@0.3.29(@langchain/core@0.3.61(@opentelemetry/api@1.9.0)(openai@5.8.2(ws@8.18.2)(zod@3.25.67)))(@opentelemetry/api@1.9.0)(axios@1.10.0)(openai@5.8.2(ws@8.18.2)(zod@3.25.67))(ws@8.18.2)):
     dependencies:
       langchain: 0.3.29(@langchain/core@0.3.61(@opentelemetry/api@1.9.0)(openai@5.8.2(ws@8.18.2)(zod@3.25.67)))(@opentelemetry/api@1.9.0)(axios@1.10.0)(openai@5.8.2(ws@8.18.2)(zod@3.25.67))(ws@8.18.2)
-      langfuse: 3.37.6
+      langfuse: 3.38.1
       langfuse-core: 3.37.6
 
-  langfuse@3.37.6:
+  langfuse@3.38.1:
     dependencies:
-      langfuse-core: 3.37.6
+      langfuse-core: 3.38.1
 
   langsmith@0.3.36(@opentelemetry/api@1.9.0)(openai@5.8.2(ws@8.18.2)(zod@3.25.67)):
     dependencies:

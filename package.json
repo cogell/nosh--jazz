@@ -27,6 +27,7 @@
     "effect": "^3.16.11",
     "husky": "^9.1.7",
     "jazz-tools": "^0.15.4",
+    "langfuse": "^3.38.1",
     "langfuse-langchain": "^3.37.6",
     "lucide-react": "^0.523.0",
     "motion": "^12.22.0",

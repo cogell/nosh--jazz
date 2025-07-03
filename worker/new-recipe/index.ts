@@ -1,53 +1,72 @@
 import { CallbackHandler } from 'langfuse-langchain';
-import { ConfigProvider, Data, Effect } from 'effect';
+import { ConfigProvider, Data, Effect, Layer, ManagedRuntime } from 'effect';
 
-import { Recipe } from '../../src/schema';
+import { Account, Recipe } from '../../src/schema';
 import { scrapeUrl, type ScrapeResult } from './scrape-url';
 import { createRecipeDataNode } from './get-recipe-data';
+import { createApplyTagsNode } from './apply-tags';
 import { startJazzWorker } from '../_lib/start-jazz-worker';
-interface NewRecipeRequest {
-  url: string;
-  senderId: string;
-  recipeId: string;
-}
+import { z } from 'jazz-tools';
+// import { Langfuse } from 'langfuse';
+
+const NewRecipeRequest = z.object({
+  url: z.string(),
+  senderId: z.string(),
+  recipeId: z.string(),
+  tags: z.array(z.string()),
+});
 
 export async function handleNewRecipe(request: Request, env: Env) {
   try {
-    const body = (await request.json()) as NewRecipeRequest; // TODO: add runtime check
-    const { url, senderId, recipeId } = body;
-    if (
-      typeof url !== 'string' ||
-      typeof senderId !== 'string' ||
-      typeof recipeId !== 'string'
-    ) {
-      return Response.json(
-        {
-          success: false,
-          error: 'Missing or invalid url or senderId or recipeId',
-        },
-        { status: 400 },
-      );
+    const body = NewRecipeRequest.safeParse(await request.json());
+    if (!body.success) {
+      const error = body.error.message;
+      return Response.json({ success: false, error }, { status: 400 });
     }
 
-    console.log('senderId', senderId, 'recipeId', recipeId);
+    const { url, senderId, recipeId, tags } = body.data;
 
-    const jazzWorker = await Effect.runPromise(
-      Effect.withConfigProvider(
-        startJazzWorker().pipe(
-          Effect.catchTags({
-            JazzWorkerStartError: (error) => {
-              console.error('Failed to start Jazz worker', error);
-              return Effect.succeed(null);
-            },
-            JazzWorkerCryptoError: (error) => {
-              console.error('Failed to create crypto', error);
-              return Effect.succeed(null);
-            },
-          }),
-        ),
-        ConfigProvider.fromJson(env),
-      ),
+    console.log('senderId', senderId, 'recipeId', recipeId, 'tags', tags);
+
+    // const account = await co.account().load(senderId, {
+    //   resolve: {
+    //     root: {
+    //       tags: {
+    //         $each: true,
+    //       },
+    //     },
+    //   },
+    // });
+
+    // console.log('account.root.tags', account.root?.tags);
+
+    // const langfuse = new Langfuse({
+    //   publicKey: env.LANGFUSE_PUBLIC_KEY,
+    //   secretKey: env.LANGFUSE_SECRET_KEY,
+    //   baseUrl: env.LANGFUSE_BASEURL,
+    // });
+
+    // const root = langfuse.trace({ name: 'new-recipe' });
+
+    // can I add a Logger layer to our worker runtime?
+    // - [ ] what about for langfuse? dunno.
+    // set log level from config - https://effect.website/docs/observability/logging/#loading-the-log-level-from-configuration
+
+    const LiveConfigProvider = ConfigProvider.fromJson(env);
+    // const BadConfigProvider = ConfigProvider.fromJson({
+    //   JAZZ_WORKER_ACCOUNT: '123',
+    //   JAZZ_WORKER_SECRET: '123',
+    //   JAZZ_WORKER_SYNC_SERVER: '123',
+    // });
+
+    const ConfigProviderLayer = Layer.setConfigProvider(LiveConfigProvider);
+    const WorkerRuntime = ManagedRuntime.make(ConfigProviderLayer);
+
+    const jazzWorker = await WorkerRuntime.runPromise(
+      startJazzWorker().pipe(Effect.catchAllCause(Effect.logError)),
     );
+
+    console.log('jazzWorker', jazzWorker);
 
     if (!jazzWorker) {
       return Response.json(
@@ -120,6 +139,14 @@ export async function handleNewRecipe(request: Request, env: Env) {
       );
     }
 
+    const recipeTags = await createApplyTagsNode({ env, lfHandler })({
+      possibleTags: tags,
+      recipeTitle: recipeData.title,
+      recipeIngredients: recipeData.ingredients,
+      recipeInstructions: recipeData.instructions,
+      recipeDescription: recipeData.description,
+    });
+
     recipe.serverWorkerStatus = 'success';
     recipe.serverWorkerProgress = 100;
     recipe.serverWorkerError = undefined;
@@ -130,12 +157,14 @@ export async function handleNewRecipe(request: Request, env: Env) {
     recipe.description = recipeData.description;
     recipe.author = recipeData.author;
     recipe.source = recipeData.source;
+    recipe.tags = recipeTags.tags;
 
     // TODO:
     // do I need to wait for this sync to complete?
 
     return Response.json({ success: true, url });
   } catch (error) {
+    console.error('error', error);
     return Response.json(
       { success: false, error: 'Invalid request body' },
       { status: 400 },

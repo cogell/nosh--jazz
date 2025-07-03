@@ -19,7 +19,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'flex flex-col gap-2 rounded-lg border border-slate-200 bg-slate-50 w-full',
+        'flex flex-col gap-2 rounded-md border border-slate-200 bg-slate-50 w-full',
         noPadding ? '' : CARD_PADDING_CLASS,
         className,
       )}

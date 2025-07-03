@@ -1,14 +1,11 @@
-import { Account, Recipe } from '@/schema';
+import { Account, Recipe, Tags } from '@/schema';
 
 export const postNewRecipe = (
-  me: Account | undefined | null,
+  me: Account,
   url: string,
   recipeId: string,
+  tags: Tags,
 ) => {
-  if (!me) {
-    throw new Error('No account found');
-  }
-
   fetch('/api/new-recipe', {
     method: 'POST',
     headers: {
@@ -18,6 +15,7 @@ export const postNewRecipe = (
       url,
       senderId: me?.id,
       recipeId,
+      tags,
     }),
   });
 };

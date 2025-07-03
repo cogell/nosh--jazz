@@ -21,7 +21,7 @@ const AuthorSource = ({
   const toDisplay = [author, source].filter(Boolean).join(' • ');
 
   return (
-    <div className="flex flex-row gap-1 justify-end w-full opacity-50">
+    <div className="flex flex-row gap-1 justify-end opacity-50">
       <Muted>{toDisplay}</Muted>
     </div>
   );
@@ -121,7 +121,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
 
         <div
           className={cn(
-            'flex flex-col gap-2',
+            'flex flex-col gap-4',
             CARD_PADDING_CLASS,
             isErrorStatus ? 'opacity-50' : '',
           )}
@@ -132,7 +132,19 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
               {recipe.description || 'No description'}
             </span>
           </div>
-          <AuthorSource author={recipe.author} source={recipe.source} />
+          <div className="flex flex-row gap-2 items-end">
+            <div className="flex-1 flex flex-row gap-2 flex-wrap">
+              {recipe.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-sm text-muted-foreground bg-slate-100 rounded-xs px-2 py-1"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <AuthorSource author={recipe.author} source={recipe.source} />
+          </div>
         </div>
       </Card>
     </Link>
