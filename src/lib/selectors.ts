@@ -25,7 +25,7 @@ export const useRecipe = (id: string) => {
 export const useTags = () => {
   const { me } = useAccount(Account, {
     resolve: {
-      root: { tags: { $each: true } },
+      root: { tags: true },
     },
   });
   return me?.root?.tags;

@@ -1,7 +1,7 @@
 import { CallbackHandler } from 'langfuse-langchain';
 import { ConfigProvider, Data, Effect, Layer, ManagedRuntime } from 'effect';
 
-import { Account, Recipe } from '../../src/schema';
+import { Account, Recipe, Tags } from '../../src/schema';
 import { scrapeUrl, type ScrapeResult } from './scrape-url';
 import { createRecipeDataNode } from './get-recipe-data';
 import { createApplyTagsNode } from './apply-tags';
@@ -13,7 +13,7 @@ const NewRecipeRequest = z.object({
   url: z.string(),
   senderId: z.string(),
   recipeId: z.string(),
-  tags: z.array(z.string()),
+  tagsId: z.string(),
 });
 
 export async function handleNewRecipe(request: Request, env: Env) {
@@ -24,9 +24,9 @@ export async function handleNewRecipe(request: Request, env: Env) {
       return Response.json({ success: false, error }, { status: 400 });
     }
 
-    const { url, senderId, recipeId, tags } = body.data;
+    const { url, senderId, recipeId, tagsId } = body.data;
 
-    console.log('senderId', senderId, 'recipeId', recipeId, 'tags', tags);
+    console.log('senderId', senderId, 'recipeId', recipeId, 'tagsId', tagsId);
 
     // const account = await co.account().load(senderId, {
     //   resolve: {
@@ -65,8 +65,6 @@ export async function handleNewRecipe(request: Request, env: Env) {
     const jazzWorker = await WorkerRuntime.runPromise(
       startJazzWorker().pipe(Effect.catchAllCause(Effect.logError)),
     );
-
-    console.log('jazzWorker', jazzWorker);
 
     if (!jazzWorker) {
       return Response.json(
@@ -139,8 +137,20 @@ export async function handleNewRecipe(request: Request, env: Env) {
       );
     }
 
+    const tags = await Tags.load(tagsId);
+    if (!tags) {
+      recipe.serverWorkerStatus = 'error';
+      recipe.serverWorkerError =
+        'Failed to load tags - cedric has been notified';
+      return Response.json(
+        { success: false, error: 'Failed to load tags' },
+        { status: 500 },
+      );
+    }
+
     const recipeTags = await createApplyTagsNode({ env, lfHandler })({
-      possibleTags: tags,
+      tagInstructions: tags.instructions,
+      possibleTags: tags.possibleTags,
       recipeTitle: recipeData.title,
       recipeIngredients: recipeData.ingredients,
       recipeInstructions: recipeData.instructions,

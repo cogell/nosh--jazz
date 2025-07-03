@@ -11,6 +11,17 @@ import { Card } from '@/components/card';
 import DevOnly from '@/components/dev-only';
 import { postNewRecipe } from '@/lib/recipe';
 import { useRecipes, useTags } from '@/lib/selectors';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 
 function RecipeList() {
   const recipes = useRecipes();
@@ -28,13 +39,35 @@ function RecipeList() {
   );
 }
 
-function ResetButton() {
+export function DeleteAccountButton() {
   const { logOut } = useAccount(Account);
   const handleReset = async () => {
     await logOut();
-    window.location.reload();
+    window.location.href = '/';
+    // window.location.reload();
   };
-  return <Button onClick={handleReset}>Reset</Button>;
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive">Delete Account</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will delete your account and sign you out. This action cannot
+            be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleReset}>
+            Yes, delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }
 
 const UrlSchema = z.url();
@@ -227,7 +260,12 @@ function AddRecipeForm() {
             throw new Error('No account or tags found');
           }
 
-          postNewRecipe(me, snapshot.context.url, newRecipe.id, me.root.tags);
+          postNewRecipe(
+            me,
+            snapshot.context.url,
+            newRecipe.id,
+            me.root.tags.id,
+          );
         },
       },
     }),
@@ -275,7 +313,7 @@ function HomePage() {
       <RecipeList />
 
       <DevOnly>
-        <ResetButton />
+        <DeleteAccountButton />
       </DevOnly>
     </div>
   );

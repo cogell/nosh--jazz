@@ -47,10 +47,21 @@ export const RecipeList = co.list(Recipe);
 export type RecipeList = co.loaded<typeof RecipeList>;
 
 // not sure it needs to be a co.list for our uses...
-export const Tags = co.list(z.string());
+export const Tags = co.map({
+  possibleTags: z.array(z.string()),
+  instructions: z.string(),
+});
 export type Tags = co.loaded<typeof Tags>;
 const makeInitialTags = (ownerGroup: Group) =>
-  Tags.create(['Dinner', 'Lunch', 'Breakfast', 'Dessert', 'Snack'], ownerGroup);
+  Tags.create(
+    {
+      possibleTags: ['Dinner', 'Lunch', 'Breakfast', 'Dessert', 'Snack'],
+      instructions: `Apply tags to the recipe based on the recipe title, ingredients, instructions, and description. 
+
+If you are debating between applying "Lunch" or "Dinner" tag, choose "Dinner".`,
+    },
+    ownerGroup,
+  );
 
 const ROOT_CURRENT_SCHEMA_VERSION = 1;
 export const Root = co.map({
@@ -58,6 +69,19 @@ export const Root = co.map({
   recipes: RecipeList,
   tags: Tags,
 });
+// .withMigration((root) => {
+//   console.log('Root.withMigration running!');
+//   console.log('root', root);
+//   if (root && root.schemaVersion === undefined) {
+//     const ownerGroup = makeOwnerGroup();
+//     root.schemaVersion = ROOT_CURRENT_SCHEMA_VERSION;
+//     root.recipes = RecipeList.create([], ownerGroup);
+//     root.tags = makeInitialTags();
+//   }
+
+//   // return root;
+// });
+
 const makeInitialRoot = (ownerGroup: Group) =>
   Root.create(
     {
@@ -88,6 +112,8 @@ const makeOwnerGroup = async () => {
   return ownerGroup;
 };
 
+// how can I init account root items with owner group and add server worker as a member?
+
 export const Account = co
   .account({
     root: Root,
@@ -95,8 +121,11 @@ export const Account = co
   })
   .withMigration(async (acct) => {
     console.log('withMigration running!');
+    console.log('acct.root', acct.root);
 
-    if (acct.root?.schemaVersion === undefined) {
+    // TODO: this doesn't seem to be working...
+    if (acct.root && acct.root.schemaVersion === undefined) {
+      console.log('acct.root.schemaVersion is undefined');
       const oldRecipes = acct.root?.recipes;
       console.log('oldRecipes', oldRecipes);
       const ownerGroup = await makeOwnerGroup();
@@ -110,14 +139,14 @@ export const Account = co
     }
 
     if (acct.root === undefined) {
+      console.log('acct.root is undefined');
       const ownerGroup = await makeOwnerGroup();
       acct.root = makeInitialRoot(ownerGroup);
     }
     if (acct.profile === undefined) {
+      console.log('acct.profile is undefined');
       acct.profile = makeInitialProfile();
     }
-
-    return acct;
   });
 
 export type Account = co.loaded<typeof Account>;

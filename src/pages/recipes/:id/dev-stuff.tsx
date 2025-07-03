@@ -152,7 +152,7 @@ const DevComponent = ({ recipe }: { recipe: Recipe }) => {
           if (!me || !tags) {
             throw new Error('No account found');
           }
-          postNewRecipe(me, recipe.url.toString(), recipe.id, tags);
+          postNewRecipe(me, recipe.url.toString(), recipe.id, tags.id);
         }}
       >
         Retry Server Worker

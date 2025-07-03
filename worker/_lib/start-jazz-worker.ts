@@ -11,7 +11,7 @@ class JazzWorkerCryptoError extends Data.TaggedError('JazzWorkerCryptoError')<{
 }> {}
 
 export const startJazzWorker = Effect.fn('startJazzWorker')(function* () {
-  yield* Effect.log('startJazzWorker2');
+  yield* Effect.log('gonna start jazz worker');
   const jazzWorkerAccountID = yield* Config.string('JAZZ_WORKER_ACCOUNT');
   const jazzWorkerAccountSecret = yield* Config.redacted('JAZZ_WORKER_SECRET');
   const syncServer = yield* Config.string('JAZZ_WORKER_SYNC_SERVER');

@@ -4,16 +4,15 @@ import { ChatOpenAI } from '@langchain/openai';
 import { models } from '../_lib/models';
 
 const systemPrompt = `
-You are a helpful assistant that applies tags to a recipe.
+You are a helpful assistant that listens to the user's instructions around how to apply tags to a recipe and then returns a list of tags that are most relevant to the recipe.
 
-You will be given a list of possible tags and a recipe.
+You will be given a list of possible tags and a recipe. You will also be given instructions on how to apply the tags to the recipe.
 
-You will return a list of tags that are most relevant to the recipe.
-
-You will return the tags as a JSON object with a tags property that is an array of strings.
+You will return a list of tags based on the instructions.
 `;
 
 type ApplyTagsState = {
+  tagInstructions: string;
   possibleTags: string[];
   recipeTitle: string;
   recipeIngredients: string[];
@@ -22,6 +21,7 @@ type ApplyTagsState = {
 };
 
 const userPrompt = ({
+  tagInstructions,
   possibleTags,
   recipeTitle,
   recipeIngredients,
@@ -29,20 +29,29 @@ const userPrompt = ({
   recipeDescription,
 }: ApplyTagsState) => `
 
-Possible tags:
+<tag-instructions>
+${tagInstructions}
+</tag-instructions>
+
+<possible-tags>
 ${possibleTags.join('\n')}
+</possible-tags>
 
-Recipe title:
+<recipe-title>
 ${recipeTitle}
+</recipe-title>
 
-Recipe ingredients:
+<recipe-ingredients>
 ${recipeIngredients.join('\n')}
+</recipe-ingredients>
 
-Recipe instructions:
+<recipe-instructions>
 ${recipeInstructions.join('\n')}
+</recipe-instructions>
 
-Recipe description:
+<recipe-description>
 ${recipeDescription}
+</recipe-description>
 `;
 
 export function createApplyTagsNode({

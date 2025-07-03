@@ -5,6 +5,7 @@ import { useSafeCoState } from '@/lib/use-safe-co-state';
 import { Recipe } from '@/schema';
 import { useCoState } from 'jazz-tools/react';
 import { Link, useRoute } from 'wouter';
+import Tag from '@/components/tag';
 
 const IngredientList = ({ ingredients }: { ingredients: string[] }) => {
   return (
@@ -50,9 +51,7 @@ export default function RecipePage() {
       <H1>{recipe?.title || recipe?.url.toString()}</H1>
       <div className="flex flex-row gap-2">
         {recipe?.tags?.map((tag) => (
-          <Badge key={tag} variant="secondary">
-            {tag}
-          </Badge>
+          <Tag key={tag} tag={tag} />
         ))}
       </div>
       {/* <div>{recipe?.firecrawlHtml}</div> */}

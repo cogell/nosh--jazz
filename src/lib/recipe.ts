@@ -1,10 +1,10 @@
-import { Account, Recipe, Tags } from '@/schema';
+import { Account, Recipe } from '@/schema';
 
 export const postNewRecipe = (
   me: Account,
   url: string,
   recipeId: string,
-  tags: Tags,
+  tagsId: string,
 ) => {
   fetch('/api/new-recipe', {
     method: 'POST',
@@ -15,7 +15,7 @@ export const postNewRecipe = (
       url,
       senderId: me?.id,
       recipeId,
-      tags,
+      tagsId,
     }),
   });
 };
